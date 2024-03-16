@@ -2,21 +2,37 @@ AWSTemplateFormatVersion: 2010-09-09
 
 ## =================== DESCRIPTION =================== ##
 Description: >-
-  AWS codebuild +  ecr
+  A Cloudformation Stack for building a CI/CD job of a docker image that inside of a Github repo and a new private DTR to push to after CI/CD job.
+  Some environment vars are predefined in this stack, so do not need to write them inside the cicd job's definition file.
+    - AWS Codebuild
+    - Amazon Elastic Container Registry
+    - AWS Secrets Manager
+    - AWS IAM Role
+  After stack is launched and finished,User need to :
+   1. provide in the Github repo a Dockerfile and all needed files for image's build
+   2. provide in the same Github repo a functional buildspec.yml for AWS Codebuild
+
 
 ## ===================== METADATA ===================== ##
 Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
       - Label:
-          default: DNS parameters for S3 buckets
+          default: Tag parameters for all tagable resources
         Parameters:
-          - paramRootDomain
-          - paramSubdomain
+          - paramUniqueTagName
+          - paramUniqueTagValue
       - Label:
-          default: AWS tag parameters
+          default: Github parameters
         Parameters:
-          - paramTagName
+          - paramGithubRepo
+          - paramGithubToken
+          - paramGitTiggerPath
+      - Label:
+          default: AWS Authentication parammeters
+        Parameters:
+          - paramAWSAcessKey
+          - paramAWSAcessSecret
 
 ## ==================== PARAMETERS ==================== ##
 Parameters:
@@ -28,13 +44,19 @@ Parameters:
     Type: String
     Description: unique tag's value
   paramGithubRepo:
-    Description: Github repo url for codebuild project
+    Description: Target Github repo url for codebuild project
     Type: String
   paramGithubToken:
-    Description: GitHub personal access token
+    Description: GitHub personal token for connecting to target Github repo
     Type: String
   paramGitTiggerPath:
-    Description: Only change in the path will trigger Codebuild
+    Description: Only the change on this path will trigger Codebuild's CI/CD job
+    Type: String
+  paramAWSAcessKey:
+    Description: AWS_ACCESS_KEY_ID predefined var for AWS's authentication actions inside Codebuild
+    Type: String
+  paramAWSAcessSecret:
+    Description: AWS_ACCESS_KEY_SECRET predefined var for AWS's authentication actions inside Codebuild
     Type: String
 ## ==================== MAPPINGS ==================== ##
 #Mappings:
@@ -79,6 +101,26 @@ Resources:
       - Key: !Ref paramUniqueTagName
         Value: !Ref paramUniqueTagValue
 
+  MySecretAcessKey:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub 'secret-${paramUniqueTagValue}-awsacesskey'
+      Description: Sotre Github personal token
+      SecretString: !Sub '{"AWSAcessKey":"${paramAWSAcessKey}"}'
+      Tags:
+      - Key: !Ref paramUniqueTagName
+        Value: !Ref paramUniqueTagValue
+
+  MySecretAcessSecret:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub 'secret-${paramUniqueTagValue}-awsacesssecret'
+      Description: Sotre Github personal token
+      SecretString: !Sub '{"AWSAcessSecret":"${paramAWSAcessSecret}"}'
+      Tags:
+      - Key: !Ref paramUniqueTagName
+        Value: !Ref paramUniqueTagValue
+
 
 
   myCBSourceCredential:
@@ -107,6 +149,12 @@ Resources:
         - Name: IMAGE_REPO_NAME
           Type: PLAINTEXT
           Value: !Ref MyRepo
+        - Name: AWS_ACCESS_KEY_ID
+          Type: SECRETS_MANAGER
+          Value: !Sub "{{resolve:secretsmanager:${MySecretAcessKey}::AWSAcessKey}}"
+        - Name: AWS_SECRET_ACCESS_KEY
+          Type: SECRETS_MANAGER
+          Value: !Sub "{{resolve:secretsmanager:${MySecretAcessSecret}::AWSAcessSecret}}"
       Source:
         Location: !Ref paramGithubRepo
         BuildSpec: buildspec.yml
@@ -166,11 +214,18 @@ Resources:
             - s3:GetObjectVersion
             - s3:GetBucketAcl
             - s3:GetBucketLocation
-
+          - Effect: Allow
+            Action: 
+            - secretsmanager:GetSecretValue
+            Resource:
+            - !Ref MySecretAcessKey
+            - !Ref MySecretAcessSecret
       Tags:
       - Key: !Ref paramUniqueTagName
         Value: !Ref paramUniqueTagValue
 
 ## ======================= OUTPUT ====================== ##
-#Outputs:
-
+Outputs:
+  outputRepoURI:
+    Description:  URI of my private AWS Docker register(ECR)
+    Value: !GetAtt MyRepo.RepositoryUri
