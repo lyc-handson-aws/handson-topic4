@@ -1,0 +1,176 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+## =================== DESCRIPTION =================== ##
+Description: >-
+  AWS codebuild +  ecr
+
+## ===================== METADATA ===================== ##
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: DNS parameters for S3 buckets
+        Parameters:
+          - paramRootDomain
+          - paramSubdomain
+      - Label:
+          default: AWS tag parameters
+        Parameters:
+          - paramTagName
+
+## ==================== PARAMETERS ==================== ##
+Parameters:
+  paramUniqueTagName:
+    Type: String
+    Default: 'yuanchao-handson-tag'
+    Description: unique tag for all resources defined in this stack Cloudformation
+  paramUniqueTagValue:
+    Type: String
+    Description: unique tag's value
+  paramGithubRepo:
+    Description: Github repo url for codebuild project
+    Type: String
+  paramGithubToken:
+    Description: GitHub personal access token
+    Type: String
+  paramGitTiggerPath:
+    Description: Only change in the path will trigger Codebuild
+    Type: String
+## ==================== MAPPINGS ==================== ##
+#Mappings:
+
+
+## ==================== CONDITIONS ==================== ##
+#Conditions:
+
+
+## =================== RESOURCES =================== ##
+Resources:
+  MyRepo: 
+    Type: AWS::ECR::Repository
+    Properties: 
+      RepositoryName: !Sub 'repo-${paramUniqueTagValue}'
+      RepositoryPolicyText: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: Allow
+            Principal: 
+              AWS: 
+               - !Ref AWS::AccountId
+            Action: 
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:BatchGetImage"
+              - "ecr:BatchCheckLayerAvailability"
+              - "ecr:PutImage"
+              - "ecr:InitiateLayerUpload"
+              - "ecr:UploadLayerPart"
+              - "ecr:CompleteLayerUpload"
+      Tags:
+      - Key: !Ref paramUniqueTagName
+        Value: !Ref paramUniqueTagValue
+
+  MySecret:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub 'secret-${paramUniqueTagValue}'
+      Description: Sotre Github personal token
+      SecretString: !Sub '{"Githubtoken":"${paramGithubToken}"}'
+      Tags:
+      - Key: !Ref paramUniqueTagName
+        Value: !Ref paramUniqueTagValue
+
+
+
+  myCBSourceCredential:
+    Type: 'AWS::CodeBuild::SourceCredential'
+    Properties:
+      Token: !Sub "{{resolve:secretsmanager:${MySecret}::Githubtoken}}"
+      ServerType: GITHUB
+      AuthType: PERSONAL_ACCESS_TOKEN
+
+
+
+  myCBProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub 'cbproject-${paramUniqueTagValue}'
+      Visibility: PRIVATE
+      ServiceRole: !GetAtt myCBRole.Arn
+      Artifacts:
+        Type: no_artifacts
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        PrivilegedMode: true
+        EnvironmentVariables:
+        - Name: IMAGE_REPO_NAME
+          Type: PLAINTEXT
+          Value: !Ref MyRepo
+      Source:
+        Location: !Ref paramGithubRepo
+        BuildSpec: buildspec.yml
+        Type: GITHUB
+        Auth:
+          Resource: !Ref myCBSourceCredential
+          Type: OAUTH
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH
+            - Type: HEAD_REF
+              Pattern: ^refs/heads/master
+            - Type: FILE_PATH
+              Pattern: !Ref paramGitTiggerPath
+      LogsConfig:
+        CloudWatchLogs:
+          GroupName: !Sub 'cwgroup-${paramUniqueTagValue}'
+          Status: ENABLED
+      Tags:
+      - Key: !Ref paramUniqueTagName
+        Value: !Ref paramUniqueTagValue
+
+  myCBRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'role-${paramUniqueTagValue}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - codebuild.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: !Sub 'policy-${paramUniqueTagValue}'
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Resource:
+            -  !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          - Effect: Allow
+            Resource:
+            - !Sub 'arn:aws:s3:::codepipeline-${AWS::Region}-*'
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:GetObjectVersion
+            - s3:GetBucketAcl
+            - s3:GetBucketLocation
+
+      Tags:
+      - Key: !Ref paramUniqueTagName
+        Value: !Ref paramUniqueTagValue
+
+## ======================= OUTPUT ====================== ##
+#Outputs:
+
