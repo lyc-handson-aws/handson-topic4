@@ -152,10 +152,10 @@ Resources:
           Value: !Ref MyRepo
         - Name: AWS_ACCESS_KEY_ID
           Type: SECRETS_MANAGER
-          Value: !Sub "{{resolve:secretsmanager:${MySecretAcessKey}::AWSAcessKey}}"
+          Value: !Sub 'secret-${paramUniqueTagValue}-awsacesskey'
         - Name: AWS_SECRET_ACCESS_KEY
           Type: SECRETS_MANAGER
-          Value: !Sub "{{resolve:secretsmanager:${MySecretAcessSecret}::AWSAcessSecret}}"
+          Value: !Sub 'secret-${paramUniqueTagValue}-awsacesssecret'
       Source:
         Location: !Ref paramGithubRepo
         BuildSpec: buildspec.yml
