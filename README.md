@@ -45,18 +45,16 @@ Project's AWS resources:
 :point_right: AWS::SecretsManager::Secret
 
 - a secret that store the github personal token
-- a secret that store the aws access key id
-- a secret that store the aws access key secret
 
 :point_right: AWS::IAM::Role
 
-- Grant a role relatives permissions (as AWS Codebuild service)to interact with other AWS resources: AWS Cloudwatch(log)/AWS Secret manager...
+- Grant a role relatives permissions (as AWS Codebuild service)to interact with other AWS resources: AWS Cloudwatch(log)/AWS Secret manager/Amazon ECR...
 
 :point_right: AWS::CodeBuild::Project
 
 - Private Project with no artifact
 - Define environment type used for Build runtime
-- Define environment vars that will be used during the Build like AWS authtication infos, DTR URL(Amazon ECR)  
+- Define environment vars including DTR Repo name(ECR)  
 - Bind the IAM role
 
 - Define the source Github repo and buildspec.yaml's location and trigger way/condition
