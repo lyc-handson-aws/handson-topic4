@@ -149,7 +149,10 @@ Resources:
         EnvironmentVariables:
         - Name: IMAGE_REPO_NAME
           Type: PLAINTEXT
-          Value: !Ref MyRepo
+          Value: !Ref MyRepo 
+        - Name: AWS_ACCOUNT_ID
+          Type: PLAINTEXT
+          Value: !Ref "AWS::AccountId"
         - Name: AWS_ACCESS_KEY_ID
           Type: SECRETS_MANAGER
           Value: !Sub 'secret-${paramUniqueTagValue}-awsacesskey'
