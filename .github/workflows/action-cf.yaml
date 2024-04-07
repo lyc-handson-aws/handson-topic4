@@ -42,7 +42,5 @@ jobs:
             paramGithubRepo=${{ vars.URL_GITHUB }},
             paramGithubToken=${{ secrets.TOKEN_GITHUB }},
             paramGitTiggerPath=redmine,
-            paramAWSAcessKey=${{ secrets.AWS_ACCESS_KEY_ID }},
-            paramAWSAcessSecret=${{ secrets.AWS_SECRET_ACCESS_KEY }},
             paramUniqueTagName=yuanchao-handson-tag,
             paramUniqueTagValue=${{ github.event.repository.name }}

@@ -8,10 +8,7 @@ phases:
         commands:
             ### Login to Amazon ECR
              - echo Logging in to Amazon ECR...
-             - |
-                login_pwd=`aws ecr get-login-password --region $AWS_DEFAULT_REGION`
-                echo "login password is: $login_pwd"
-             - docker login $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com --username AWS --password 
+             - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
             ### Pulling the image
              - echo Pulling latest image from Docker Hub
              - docker pull $IMAGE_REPO_NAME:latest || true
@@ -21,7 +18,8 @@ phases:
         commands:
             ### Building the image 
              - echo Build started on `date`
-             - cd redmine && docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+             - cd redmine && docker build -t ${IMAGE_REPO_NAME} . 
+             - docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
              - echo Build completed on `date`
     post_build:
         commands:

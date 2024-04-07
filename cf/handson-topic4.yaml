@@ -28,11 +28,6 @@ Metadata:
           - paramGithubRepo
           - paramGithubToken
           - paramGitTiggerPath
-      - Label:
-          default: AWS Authentication parammeters
-        Parameters:
-          - paramAWSAcessKey
-          - paramAWSAcessSecret
 
 ## ==================== PARAMETERS ==================== ##
 Parameters:
@@ -51,12 +46,6 @@ Parameters:
     Type: String
   paramGitTiggerPath:
     Description: Only the change on this path will trigger Codebuild's CI/CD job
-    Type: String
-  paramAWSAcessKey:
-    Description: AWS_ACCESS_KEY_ID predefined var for AWS's authentication actions inside Codebuild
-    Type: String
-  paramAWSAcessSecret:
-    Description: AWS_ACCESS_KEY_SECRET predefined var for AWS's authentication actions inside Codebuild
     Type: String
 ## ==================== MAPPINGS ==================== ##
 #Mappings:
@@ -87,6 +76,7 @@ Resources:
               - "ecr:InitiateLayerUpload"
               - "ecr:UploadLayerPart"
               - "ecr:CompleteLayerUpload"
+              - "ecr:GetAuthorizationToken"
       Tags:
       - Key: !Ref paramUniqueTagName
         Value: !Ref paramUniqueTagValue
@@ -101,25 +91,7 @@ Resources:
       - Key: !Ref paramUniqueTagName
         Value: !Ref paramUniqueTagValue
 
-  MySecretAcessKey:
-    Type: 'AWS::SecretsManager::Secret'
-    Properties:
-      Name: !Sub 'secret-${paramUniqueTagValue}-awsacesskey'
-      Description: Sotre aws access key
-      SecretString: !Sub '{"AWSAcessKey":"${paramAWSAcessKey}"}'
-      Tags:
-      - Key: !Ref paramUniqueTagName
-        Value: !Ref paramUniqueTagValue
 
-  MySecretAcessSecret:
-    Type: 'AWS::SecretsManager::Secret'
-    Properties:
-      Name: !Sub 'secret-${paramUniqueTagValue}-awsacesssecret'
-      Description: Sotre aws access secret
-      SecretString: !Sub '{"AWSAcessSecret":"${paramAWSAcessSecret}"}'
-      Tags:
-      - Key: !Ref paramUniqueTagName
-        Value: !Ref paramUniqueTagValue
 
 
 
@@ -153,12 +125,6 @@ Resources:
         - Name: AWS_ACCOUNT_ID
           Type: PLAINTEXT
           Value: !Ref "AWS::AccountId"
-        - Name: AWS_ACCESS_KEY_ID
-          Type: SECRETS_MANAGER
-          Value: !Sub 'secret-${paramUniqueTagValue}-awsacesskey'
-        - Name: AWS_SECRET_ACCESS_KEY
-          Type: SECRETS_MANAGER
-          Value: !Sub 'secret-${paramUniqueTagValue}-awsacesssecret'
       Source:
         Location: !Ref paramGithubRepo
         BuildSpec: buildspec.yml
@@ -222,9 +188,18 @@ Resources:
             Action: 
             - secretsmanager:GetSecretValue
             Resource:
-            - !Ref MySecretAcessKey
-            - !Ref MySecretAcessSecret
             - !Ref MyGithubSecret
+          - Effect: Allow
+            Action: 
+            - "ecr:BatchCheckLayerAvailability"
+            - "ecr:CompleteLayerUpload"
+            - "ecr:GetAuthorizationToken"
+            - "ecr:InitiateLayerUpload"
+            - "ecr:PutImage"
+            - "ecr:UploadLayerPart"
+            - "ecr:DescribeRepositories"
+            Resource:
+            - "*"
       Tags:
       - Key: !Ref paramUniqueTagName
         Value: !Ref paramUniqueTagValue
