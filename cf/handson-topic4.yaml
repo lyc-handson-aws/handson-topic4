@@ -91,10 +91,10 @@ Resources:
       - Key: !Ref paramUniqueTagName
         Value: !Ref paramUniqueTagValue
 
-  MySecret:
+  MyGithubSecret:
     Type: 'AWS::SecretsManager::Secret'
     Properties:
-      Name: !Sub 'secret-${paramUniqueTagValue}'
+      Name: !Sub 'secret-${paramUniqueTagValue}-github'
       Description: Sotre Github personal token
       SecretString: !Sub '{"Githubtoken":"${paramGithubToken}"}'
       Tags:
@@ -105,7 +105,7 @@ Resources:
     Type: 'AWS::SecretsManager::Secret'
     Properties:
       Name: !Sub 'secret-${paramUniqueTagValue}-awsacesskey'
-      Description: Sotre Github personal token
+      Description: Sotre aws access key
       SecretString: !Sub '{"AWSAcessKey":"${paramAWSAcessKey}"}'
       Tags:
       - Key: !Ref paramUniqueTagName
@@ -115,7 +115,7 @@ Resources:
     Type: 'AWS::SecretsManager::Secret'
     Properties:
       Name: !Sub 'secret-${paramUniqueTagValue}-awsacesssecret'
-      Description: Sotre Github personal token
+      Description: Sotre aws access secret
       SecretString: !Sub '{"AWSAcessSecret":"${paramAWSAcessSecret}"}'
       Tags:
       - Key: !Ref paramUniqueTagName
@@ -126,7 +126,7 @@ Resources:
   myCBSourceCredential:
     Type: 'AWS::CodeBuild::SourceCredential'
     Properties:
-      Token: !Sub "{{resolve:secretsmanager:${MySecret}::Githubtoken}}"
+      Token: !Sub "{{resolve:secretsmanager:${MyGithubSecret}::Githubtoken}}"
       ServerType: GITHUB
       AuthType: PERSONAL_ACCESS_TOKEN
 
@@ -221,6 +221,7 @@ Resources:
             Resource:
             - !Ref MySecretAcessKey
             - !Ref MySecretAcessSecret
+            - !Ref MyGithubSecret
       Tags:
       - Key: !Ref paramUniqueTagName
         Value: !Ref paramUniqueTagValue
