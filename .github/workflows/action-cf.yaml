@@ -39,10 +39,10 @@ jobs:
           disable-rollback: "1"
           capabilities: CAPABILITY_NAMED_IAM
           parameter-overrides: >-
-            paramGithubRepo=${{ env.URL_GITHUB }},
-            paramGithubToken=${{ secret.TOKEN_GITHUB }},
+            paramGithubRepo=${{ vars.URL_GITHUB }},
+            paramGithubToken=${{ secrets.TOKEN_GITHUB }},
             paramGitTiggerPath=redmine,
-            paramAWSAcessKey=${{ secret.AWS_ACCESS_KEY_ID }},
-            paramAWSAcessSecret=${{ secret.AWS_SECRET_ACCESS_KEY }},
+            paramAWSAcessKey=${{ secrets.AWS_ACCESS_KEY_ID }},
+            paramAWSAcessSecret=${{ secrets.AWS_SECRET_ACCESS_KEY }},
             paramUniqueTagName=yuanchao-handson-tag,
             paramUniqueTagValue=${{ github.event.repository.name }}

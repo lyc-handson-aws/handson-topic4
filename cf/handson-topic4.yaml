@@ -133,6 +133,7 @@ Resources:
 
 
   myCBProject:
+    DependsOn: myCBSourceCredential
     Type: AWS::CodeBuild::Project
     Properties:
       Name: !Sub 'cbproject-${paramUniqueTagValue}'
@@ -159,9 +160,9 @@ Resources:
         Location: !Ref paramGithubRepo
         BuildSpec: buildspec.yml
         Type: GITHUB
-        Auth:
-          Resource: !Ref myCBSourceCredential
-          Type: OAUTH
+        #Auth:
+        #  Resource: !Ref myCBSourceCredential
+        #  Type: OAUTH
       Triggers:
         Webhook: true
         FilterGroups:
