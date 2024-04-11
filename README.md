@@ -1,8 +1,7 @@
-# Topic 4 - CI/CD project(job) push to private docker trusted registry  
+# Topic 4 - Docker image build's CI/CD, push to private DTR(Codebuild+ECR)
+##  Yuanchao Hands-on Project
 
-###### Yuanchao Hands-on Project
-
-###### Check this doc and project template on Github  [here](https://github.com/lyc-handson-aws/handson-topic4)
+## This readme is more readable [here](https://github.com/lyc-handson-aws/handson-topic4)
 
 ## **Overview** 
 
