@@ -13,6 +13,13 @@
 
 :point_right: A CI/CD job for building this specific docker image and then pushing to this specific DTR
 
+## What could be learned in this topic:
+
+1. How to create an ECR repository
+2. How to use SecretsManager to store a secret and reference this secret in a CloudFormation stack
+3. How to use/configure a CodeBuild project, including configuring the build environment, trigger conditions, sources, and logging
+4. How to write a CodeBuild CI file: buildspec.yaml, especially in which how to push an image to an existing ECR
+
 ## **Architecture**
 
 the diagram below illustrates the architecture(principle) of this project:
@@ -23,9 +30,9 @@ Amazon Elastic Container Registry
 
 ## Continue Deployment
 
-CloudFormation stack's deployment: see GitHub workflows https://github.com/lyc-handson-aws/handson-topic4/blob/main/.github/workflows/action-cf.yaml
+CloudFormation stack's deployment: see GitHub workflows https://github.com/lyc-handson-aws/handson-topic4/blob/master/.github/workflows/action-cf.yaml
 
-Docker image's build and push to DRT: see Codebuild spec https://github.com/lyc-handson-aws/handson-topic4/blob/main/buildspec.yml
+Docker image's build and push to DRT: see Codebuild spec https://github.com/lyc-handson-aws/handson-topic4/blob/master/buildspec.yml
 
 ## **CloudFormation Stack Quick-create Link**
 
